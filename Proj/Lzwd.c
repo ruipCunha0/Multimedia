@@ -1,91 +1,162 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define BLOCK_SIZE 65536
-#define MAX_TABLE_SIZE 4096
+
+#define MAX_DICT_SIZE 65536
+
+typedef unsigned char byte_t; // 8-bit byte
 
 typedef struct {
     int code;
-    int prefix;
-    char character;
-} Entry;
+    byte_t prefix;
+    byte_t symbol;
+} dictEntry;
 
-void compress_block(unsigned char *block, int block_size, FILE *output_file, Entry *dictionary, int *table_size_ptr, int *next_code_ptr, int *prefix_code_ptr) {
-    int i, j;
-    int current_code;
-    char current_char;
-    int table_size = *table_size_ptr;
-    int next_code = *next_code_ptr;
-    int prefix_code = *prefix_code_ptr;
+dictEntry dictionary[MAX_DICT_SIZE];
+int dict_size;
 
-    for (i = 0; i < block_size; i++) {
-        current_char = (char)block[i];
-        if (dictionary[prefix_code].prefix != -1 && dictionary[prefix_code].character == current_char) {
-            prefix_code = dictionary[prefix_code].prefix;
+
+// Function used to find the index of the pattern
+int find_dictionary_entry(int Pa, char Pb) {
+    for (int i = 0; i < dict_size; i++) {
+        if (dictionary[i].prefix == Pa && dictionary[i].symbol == Pb) {
+            return i;
         }
-        else {
-            if (next_code < MAX_TABLE_SIZE) {
-                dictionary[next_code].code = next_code;
-                dictionary[next_code].prefix = prefix_code;
-                dictionary[next_code].character = current_char;
-                next_code++;
-                if (next_code > table_size && table_size < MAX_TABLE_SIZE) {
-                    table_size *= 2;
-                    dictionary = realloc(dictionary, sizeof(Entry) * table_size);
+    }
+    return -1;
+}
+
+// Function used to create a default dictionary
+void create_dictionary() {
+    dict_size = 256;
+    for (int i = 0; i < 256; i++) {
+        dictionary[i].code = i;
+        dictionary[i].prefix = (char)-1;
+        dictionary[i].symbol = i;
+    }
+}
+
+
+// Function to concatenate the integers and returns the resulting integer
+int concatenate(byte_t Pa, byte_t Pb) {
+
+    char string_res[50];
+    sprintf(string_res, "%u%u", Pa, Pb);
+    int res = strtol(string_res, NULL, 10);
+
+    return res;
+}
+
+
+// Function used to find the code index of Pa
+int get_index_of_Pa(byte_t Pa) {
+
+    for (int i = 0; i < dict_size; i++) {
+        if (Pa == dictionary[i].code) {
+           return dictionary[i].code;
+        }
+    }
+
+    return -1;
+}
+
+
+
+int main(int argc, char** argv) {
+
+    FILE* input_fp = fopen("example.txt", "rb");
+    if (input_fp == NULL) {
+        printf("Error: could not open input file '%s'\n", argv[1]);
+        return 1;
+    }
+
+    FILE* output_fp = fopen("output.txt", "wb");
+    if (output_fp == NULL) {
+        printf("Error: could not open output file '%s'\n", argv[2]);
+        return 1;
+    }
+
+    create_dictionary();
+
+    char block[MAX_DICT_SIZE];
+    size_t block_size;
+    int dict_index = 0;
+
+    while ((block_size = fread(block, sizeof(char), MAX_DICT_SIZE, input_fp)) > 0) {
+        for (int i = 0; i < 50; i++) {
+            printf("%d ", block[i] & 0xff);
+        }
+
+        int counter = 0;
+        int code_output = 0;
+        int counter_index = 0;
+        printf("\nBlock Size: %d \n", block_size);
+
+        // Initializate Pa with the first byte of the block
+        byte_t Pa = block[counter];
+        counter++;
+
+        while (counter < 20) {
+
+            // printf("\nPrefix Code: %d ", prefix_code);
+            byte_t Pb = block[counter];
+            // printf("\nNext Symbol: %d Counter: %d", next_symbol, counter);
+
+            counter_index = counter;
+            int j = 1;
+
+            while (counter_index + j < block_size) {
+                if (find_dictionary_entry(Pb, block[counter_index + 1]) != -1) {
+                    j = j + 1;
+                    Pb = concatenate(Pb, block[counter_index + 1]);
+                }
+
+                counter_index++;
+            }
+
+            printf("\n Biggest pattern: %d and dict size: %d", Pb, dict_size);
+
+
+            dict_index = find_dictionary_entry(Pa, Pb);
+            if (dict_index != -1) {
+
+                printf("\n Sequence found for %d! Index: %d", Pa, Pb);
+
+            } else {
+
+                printf("\n No sequence found for %d%d!", Pa, Pb);
+
+                // Add the pattern in dictionary
+                if (dict_size < MAX_DICT_SIZE) {
+                    dictionary[dict_size].prefix = Pa;
+                    dictionary[dict_size].symbol = Pb;
+                    dict_size++;
+
+                    printf("\n Added to dictionary, Dict size: %d", dict_size - 1);
+
+                    for (int i = 0; i < dict_size; i++) {
+                        if (Pa == dictionary[i].code) {
+                            code_output = dictionary[i].code;
+                        }
+                    }
+
+                    code_output = get_index_of_Pa(Pa);
+                    printf("\n Code output: %d\n", code_output);
+                    // Write the prefix code to the output file
+                    fwrite(&code_output, sizeof(int), 1, output_fp);
                 }
             }
-            fwrite(&dictionary[prefix_code].code, sizeof(int), 1, output_file);
-            prefix_code = current_char;
+
+            Pa = Pb;
+            counter++;
+
         }
+
+
     }
 
-    *table_size_ptr = table_size;
-    *next_code_ptr = next_code;
-    *prefix_code_ptr = prefix_code;
-}
-
-void compress(FILE *input_file, FILE *output_file) {
-    int i;
-    int table_size = 256;
-    int next_code = 256;
-    int prefix_code;
-    unsigned char block[BLOCK_SIZE];
-    int bytes_read;
-    Entry *dictionary = (Entry*)malloc(sizeof(Entry) * MAX_TABLE_SIZE);
-
-    for (i = 0; i < 256; i++) {
-        dictionary[i].code = i;
-        dictionary[i].prefix = -1;
-        dictionary[i].character = i;
-    }
-    prefix_code = fgetc(input_file);
-    while ((bytes_read = fread(block, sizeof(unsigned char), BLOCK_SIZE, input_file)) > 0) {
-        compress_block(block, bytes_read, output_file, dictionary, &table_size, &next_code, &prefix_code);
-    }
-    fwrite(&dictionary[prefix_code].code, sizeof(int), 1, output_file);
-    free(dictionary);
-}
-
-int main(int argc, char *argv[]) {
-    FILE *input_file;
-    FILE *output_file;
-
-    input_file = fopen("example.txt", "rb");
-    if (input_file == NULL) {
-        printf("Error: Could not open input file.\n");
-        return 1;
-    }
-
-    output_file = fopen("output.txt", "wb");
-    if (output_file == NULL) {
-        printf("Error: Could not open output file.\n");
-        return 1;
-    }
-
-    compress(input_file, output_file);
-
-    fclose(input_file);
-    fclose(output_file);
+    fclose(input_fp);
+    fclose(output_fp);
 
     return 0;
 }
