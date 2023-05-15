@@ -17,12 +17,13 @@ int dict_size;
 
 
 // Function used to find the index of the pattern
-int find_dictionary_entry(int Pa, char Pb) {
+int find_dictionary_entry(byte_t Pa, byte_t Pb) {
     for (int i = 0; i < dict_size; i++) {
         if (dictionary[i].prefix == Pa && dictionary[i].symbol == Pb) {
             return i;
         }
     }
+
     return -1;
 }
 
@@ -90,31 +91,33 @@ int main(int argc, char** argv) {
         int counter = 0;
         int code_output = 0;
         int counter_index = 0;
-        printf("\nBlock Size: %d \n", block_size);
+        // printf("\nBlock Size: %d \n", block_size);
 
         // Initializate Pa with the first byte of the block
         byte_t Pa = block[counter];
         counter++;
 
-        while (counter < 20) {
+        while (counter < 7) {
 
             // printf("\nPrefix Code: %d ", prefix_code);
             byte_t Pb = block[counter];
+            byte_t temp_Pb = Pb;
             // printf("\nNext Symbol: %d Counter: %d", next_symbol, counter);
 
             counter_index = counter;
             int j = 1;
 
             while (counter_index + j < block_size) {
-                if (find_dictionary_entry(Pb, block[counter_index + 1]) != -1) {
+                if ((find_dictionary_entry(Pb, block[counter_index + 1])) != -1) {
                     j = j + 1;
-                    Pb = concatenate(Pb, block[counter_index + 1]);
+                    temp_Pb = concatenate(Pb, block[counter_index + 1]);
+                    printf("HERE!!!!\n");
                 }
 
                 counter_index++;
             }
 
-            printf("\n Biggest pattern: %d and dict size: %d", Pb, dict_size);
+            printf("\n Biggest pattern: %d and dict size: %d", temp_Pb, dict_size);
 
 
             dict_index = find_dictionary_entry(Pa, Pb);
@@ -124,7 +127,7 @@ int main(int argc, char** argv) {
 
             } else {
 
-                printf("\n No sequence found for %d%d!", Pa, Pb);
+                // printf("\n No sequence found for %d%d!", Pa, Pb);
 
                 // Add the pattern in dictionary
                 if (dict_size < MAX_DICT_SIZE) {
@@ -132,7 +135,7 @@ int main(int argc, char** argv) {
                     dictionary[dict_size].symbol = Pb;
                     dict_size++;
 
-                    printf("\n Added to dictionary, Dict size: %d", dict_size - 1);
+                    // printf("\n Added to dictionary, Dict size: %d", dict_size - 1);
 
                     for (int i = 0; i < dict_size; i++) {
                         if (Pa == dictionary[i].code) {
