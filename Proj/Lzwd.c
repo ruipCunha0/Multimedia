@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
         byte_t Pa = block[counter];
         counter++;
 
-        while (counter < 7) {
+        while (counter < 15) {
 
             // printf("\nPrefix Code: %d ", prefix_code);
             byte_t Pb = block[counter];
@@ -111,6 +111,7 @@ int main(int argc, char** argv) {
                 if ((find_dictionary_entry(Pb, block[counter_index + 1])) != -1) {
                     j = j + 1;
                     temp_Pb = concatenate(Pb, block[counter_index + 1]);
+                    Pb = temp_Pb;
                     printf("HERE!!!!\n");
                 }
 
