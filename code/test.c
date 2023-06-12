@@ -90,6 +90,18 @@ int find_dictionary_sequence(lzwd_t map, byte_t pattern, size_t size_of_pattern)
 }
 
 
+// iterate over the dictionary to find the ID of the Pa pattern
+int find_Pa_code(lzwd_t Pa) {
+
+    for (int i = 0; i < dict_size; i++) {
+        if (equal_bytes_2(Pa, i)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+
 int search_dictionary_pattern(lzwd_t Pa, lzwd_t Pb) {
     lzwd_t temp_pattern;
     temp_pattern.value = (byte_t*) malloc(sizeof (byte_t));
@@ -106,7 +118,6 @@ int search_dictionary_pattern(lzwd_t Pa, lzwd_t Pb) {
         i++;
     }
 
-    printf("\n\n\n");
     for (int i = 0; i < dict_size; i++) {
         for (int j = 0; j < temp_pattern.size; j++) {
             if (equal_bytes_2(temp_pattern, i)) {
@@ -144,13 +155,14 @@ int main(int argc, char** argv) {
 
      while ((block_size = fread(block, sizeof(char), MAX_DICT_SIZE, input_fp)) > 0) {
 
-        for (int i = 0; i < 10; i++) {
-            // printf("%d ", block[i] & 0xff);
+        for (int i = 0; i < 50; i++) {
+            printf("%d ", block[i] & 0xff);
         }
 
         // Initializate a counter to work as an index of the position in the block array
         int counter = 0;
         int counter_index = 0;
+        int code_output = 0;
 
         // Initializate Pa with the first byte of the block
         lzwd_t Pa;
@@ -161,7 +173,7 @@ int main(int argc, char** argv) {
         counter++;
 
         // while counter < block_size(65536)
-        while(counter < 3) {
+        while(counter < 100) {
 
             // Creates a Pb variable and allocates memory to it
             lzwd_t Pb;
@@ -175,7 +187,6 @@ int main(int argc, char** argv) {
 
             while(counter_index + j < block_size) {
                 if (find_dictionary_sequence(Pb, block[counter_index + j], Pb.size + 1) != -1) {
-                    // printf("HEREEE!");
                     j++;
                     Pb.value[Pb.size] = block[counter_index + j];
                     Pb.size = Pb.size + 1;
@@ -183,18 +194,47 @@ int main(int argc, char** argv) {
                 counter_index++;
             }
 
+            // Search in the dictionary if the pattern Pa + Pb exists in the dictionary
             dict_index = search_dictionary_pattern(Pa, Pb);
 
             if (dict_index != -1) {
 
-                printf("\n Sequence found for %d! Index: %d", Pa, Pb);
+                printf("\n Sequence found!");
 
             } else {
 
                 printf("\n %d", dict_index);
 
-            counter++;
-            Pa = Pb;
+
+                // Add the pattern in dictionary
+                if (dict_size < MAX_DICT_SIZE) {
+
+                    dictionary[dict_size].value = (byte_t*) malloc(sizeof (byte_t));
+                    dictionary[dict_size].size = Pa.size + Pb.size;
+
+                    int i = 0;
+
+                    for (int i_1 = 0; i_1 < Pa.size; i_1++) {
+                        dictionary[dict_size].value[i] = Pa.value[i_1];
+                        i++;
+                    }
+                    for (int i_2 = 0; i_2 < Pb.size; i_2++) {
+                        dictionary[dict_size].value[i] = Pb.value[i_2];
+                        i++;
+                    }
+
+                    code_output = find_Pa_code(Pa);
+                    if (code_output == -1) {
+                        printf("ERROR!!!");
+                        return 0;
+                    }
+
+                    dict_size++;
+                    printf("\n Code output: %d\n", code_output);
+                }
+
+                counter++;
+                Pa = Pb;
 
             }
         }
