@@ -49,14 +49,14 @@ cmake_ninja_workdir = /home/rui/Desktop/TP2/cmake-build-debug/
 
 build cmake_object_order_depends_target_TP2: phony || CMakeFiles/TP2.dir
 
-build CMakeFiles/TP2.dir/main.c.o: C_COMPILER__TP2_Debug /home/rui/Desktop/TP2/main.c || cmake_object_order_depends_target_TP2
-  DEP_FILE = CMakeFiles/TP2.dir/main.c.o.d
+build CMakeFiles/TP2.dir/client.c.o: C_COMPILER__TP2_Debug /home/rui/Desktop/TP2/client.c || cmake_object_order_depends_target_TP2
+  DEP_FILE = CMakeFiles/TP2.dir/client.c.o.d
   FLAGS = -g -fdiagnostics-color=always -std=gnu11
   OBJECT_DIR = CMakeFiles/TP2.dir
   OBJECT_FILE_DIR = CMakeFiles/TP2.dir
 
-build CMakeFiles/TP2.dir/client.c.o: C_COMPILER__TP2_Debug /home/rui/Desktop/TP2/client.c || cmake_object_order_depends_target_TP2
-  DEP_FILE = CMakeFiles/TP2.dir/client.c.o.d
+build CMakeFiles/TP2.dir/server.c.o: C_COMPILER__TP2_Debug /home/rui/Desktop/TP2/server.c || cmake_object_order_depends_target_TP2
+  DEP_FILE = CMakeFiles/TP2.dir/server.c.o.d
   FLAGS = -g -fdiagnostics-color=always -std=gnu11
   OBJECT_DIR = CMakeFiles/TP2.dir
   OBJECT_FILE_DIR = CMakeFiles/TP2.dir
@@ -69,7 +69,7 @@ build CMakeFiles/TP2.dir/client.c.o: C_COMPILER__TP2_Debug /home/rui/Desktop/TP2
 #############################################
 # Link the executable TP2
 
-build TP2: C_EXECUTABLE_LINKER__TP2_Debug CMakeFiles/TP2.dir/main.c.o CMakeFiles/TP2.dir/client.c.o
+build TP2: C_EXECUTABLE_LINKER__TP2_Debug CMakeFiles/TP2.dir/client.c.o CMakeFiles/TP2.dir/server.c.o
   FLAGS = -g
   OBJECT_DIR = CMakeFiles/TP2.dir
   POST_BUILD = :

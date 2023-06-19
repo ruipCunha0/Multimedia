@@ -3,4 +3,4 @@ project(TP2 C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(TP2 main.c client.c)
+add_executable(TP2  client.c server.c server.c)

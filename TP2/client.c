@@ -1,20 +1,52 @@
 #include <arpa/inet.h>
 #include <stdio.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <math.h>
+#include <string.h>
 
-#define PORT 5000
+#define PI 3.14159265
 
-int main(int argc, char const* argv[]) {
+
+// run code: ./client 5000
+int main(int argc, char *argv[]) {
+
+    if (argc < 3) {
+        perror("ERROR, not enough args!");
+        return 1;
+    }
+
+    int port = atoi(argv[1]);
+    char *id_string = argv[2];
+
+    int F;
+    int N;
+    int P = 0;
+    int M = 0;
+
+    // Get F value
+    printf("Set number for F: ");
+    scanf("%d", &F);
+    if (F <= 0) {
+        perror("ERROR!");
+        return 1;
+    }
+
+    // Get N value
+    printf("Set number for N, N > 3: ");
+    scanf("%d", &N);
+    if (N <= 3) {
+        perror("ERROR!");
+        return 1;
+    }
+
+    int Fa = F * N; // Calculate the sampled frequency
 
     int status, valread, client_fd;
     struct sockaddr_in serv_addr;
+    char buffer[1024];
 
-    // String to send to server 
-    char* hello = "Hello from client";
-
-    char buffer[1024] = {0};
     // Create Socket
     if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printf("\n Socket creation error \n");
@@ -22,7 +54,7 @@ int main(int argc, char const* argv[]) {
     }
 
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_port = htons(port);
     if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
         printf("\nInvalid address/ Address not supported \n");
         return -1;
@@ -34,12 +66,13 @@ int main(int argc, char const* argv[]) {
         return -1;
     }
 
-    // Send message to the server
-    send(client_fd, hello, strlen(hello), 0);
+    for (int i = 0; i <= Fa; i++) {
+        double t = (double)i / Fa;
+        double sample = 1 + (1 + sin(2 * PI * t / N)) * 30;
 
-    // Read message from server
-    valread = read(client_fd, buffer, 1024);
-    printf("%s\n", buffer);
+        sprintf(buffer, "%s|%d|%d|%d|%d|%d|%d|", id_string, i, (int) sample, P, F, N, M);
+        send(client_fd, buffer, 25, 0);
+    }
 
     // closing the connected socket
     close(client_fd);
