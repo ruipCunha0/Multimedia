@@ -1,0 +1,3 @@
+C:/Users/a2705/Desktop/Universidade/Socket/cmake-build-debug/CMakeFiles/Socket.dir
+C:/Users/a2705/Desktop/Universidade/Socket/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/a2705/Desktop/Universidade/Socket/cmake-build-debug/CMakeFiles/rebuild_cache.dir
