@@ -6,12 +6,42 @@
 #include <math.h>
 #include <string.h>
 
-#define PORT 5005
+#define PI 3.14159265
 
 
-// run code: ./client
+// run code: ./fonte 5000 (ID)
 int main(int argc, char *argv[]) {
 
+    if (argc < 3) {
+        perror("ERROR, not enough args!");
+        return 1;
+    }
+
+    int port = atoi(argv[1]);
+    char *id_string = argv[2];
+
+    int F;
+    int N;
+    int P = 0;
+    int M = 0;
+
+    // Get F value
+    printf("Set number for F: ");
+    scanf("%d", &F);
+    if (F <= 0) {
+        perror("ERROR!");
+        return 1;
+    }
+
+    // Get N value
+    printf("Set number for N, N > 3: ");
+    scanf("%d", &N);
+    if (N <= 3) {
+        perror("ERROR!");
+        return 1;
+    }
+
+    int Fa = F * N; // Calculate the sampled frequency
 
     int status, valread, client_fd;
     struct sockaddr_in serv_addr;
@@ -24,7 +54,7 @@ int main(int argc, char *argv[]) {
     }
 
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_port = htons(port);
     if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
         printf("\nInvalid address/ Address not supported \n");
         return -1;
@@ -46,6 +76,6 @@ int main(int argc, char *argv[]) {
 
     // closing the connected socket
     close(client_fd);
-    
+
     return 0;
 }

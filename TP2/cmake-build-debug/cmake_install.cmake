@@ -1,4 +1,4 @@
-# Install script for directory: /home/rui/Desktop/TP2
+# Install script for directory: /home/catarina21/Desktop/Multimedia-main/TP2
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/rui/Desktop/TP2/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/catarina21/Desktop/Multimedia-main/TP2/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
