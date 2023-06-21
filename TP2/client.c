@@ -7,7 +7,7 @@
 #include <string.h>
 
 #define PORT 5005
-#define MAX_BUFFER_SIZE 1024
+#define BUFFER_SIZE 1024
 
 
 // run code: ./client
@@ -18,13 +18,14 @@ int main(int argc, char *argv[]) {
     int valread;
     struct sockaddr_in serv_addr;
     char buffer[1024];
-    char input_string[MAX_BUFFER_SIZE];
+    char input_string[BUFFER_SIZE];
+    char buffer_to_receive[BUFFER_SIZE]
 
     while (1) {
 
         printf("1. Conectar ao servidor\n");
         printf("2. Sair \n");
-        printf("Escolha uma opoção: ");
+        printf("Escolha uma opção: ");
 
         int choice;
         scanf("%d", &choice);
@@ -75,6 +76,9 @@ int main(int argc, char *argv[]) {
 
                             send(client_socket, buffer, 5, 0);
 
+                            read(client_socket, buffer_to_receive, BUFFER_SIZE)
+                            printf("%s\n", buffer_to_receive);
+
                             break;
 
                         case 2:
@@ -119,7 +123,7 @@ int main(int argc, char *argv[]) {
 
                         default:
 
-                            printf("Opoção não disponível...");
+                            printf("Opção não disponível...");
                             break;
 
                     }
@@ -135,7 +139,7 @@ int main(int argc, char *argv[]) {
 
             default:
 
-                printf("Opoção não disponível...");
+                printf("Opção não disponível...");
 
         }
 
