@@ -5,6 +5,7 @@ import threading
 NUM_CLIENTS_SOURCE = 3
 PORT_SOURCE = 5000
 PORT_CLIENT = 5005
+IP = '127.0.0.1'
 
 # Shared data across threads
 shared_data = []
@@ -52,22 +53,13 @@ def handle_client(client_socket):
 def start_source_server():
     try:
         source_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        server_address = ('127.0.0.1', PORT_SOURCE)
+        server_address = (IP, PORT_SOURCE)
         source_socket.bind(server_address)
         source_socket.listen(NUM_CLIENTS_SOURCE)
         print("Server is listening on port 5000...")
 
-        client_threads = []
-        for _ in range(NUM_CLIENTS_SOURCE):
-            client_socket, client_address = source_socket.accept()
-            print(f"Accepted connection from client: {client_address}")
-            client_thread = threading.Thread(target=handle_source, args=(client_socket,))
-            client_thread.start()
-            client_threads.append(client_thread)
-
-        # Wait for all client threads to finish
-        for client_thread in client_threads:
-            client_thread.join()
+        data_received_source = source_socket.recvfrom(1024)
+        print(f"Received data from client: {data_received_source.decode()}")
 
     except socket.error as e:
         print("Socket error:", e)
@@ -79,28 +71,19 @@ def start_source_server():
 def start_client_server():
     try:
         clients_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        server_address = ('127.0.0.1', PORT_CLIENT)
+        server_address = (IP, PORT_CLIENT)
         clients_socket.bind(server_address)
-        clients_socket.listen(NUM_CLIENTS_SOURCE)
+
         print("Server is listening on port 5005...")
 
-        client_threads = []
-        for _ in range(NUM_CLIENTS_SOURCE):
-            client_socket, client_address = clients_socket.accept()
-            print(f"Accepted connection from client: {client_address}")
-            client_thread = threading.Thread(target=handle_client, args=(client_socket,))
-            client_thread.start()
-            client_threads.append(client_thread)
-
-        # Wait for all client threads to finish
-        for client_thread in client_threads:
-            client_thread.join()
+        data_received_clients = clients_socket.recvfrom(1024)
+        print(f"Received data from client: {data_received_clients.decode()}")
 
     except socket.error as e:
         print("Socket error:", e)
 
     finally:
-        client_socket.close()
+        clients_socket.close()
 
 
 if __name__ == "__main__":
