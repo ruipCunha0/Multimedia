@@ -9,7 +9,7 @@
 #define PI 3.14159265
 
 
-// run code: ./fonte 5000 (ID)
+// run code: ./fonte 2000 (ID)
 int main(int argc, char *argv[]) {
 
     if (argc < 3) {
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     char buffer[1024];
 
     // Create Socket
-    if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((client_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         printf("\n Socket creation error \n");
         return -1;
     }
