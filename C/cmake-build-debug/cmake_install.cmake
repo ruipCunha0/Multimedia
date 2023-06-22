@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/a2705/Desktop/Universidade/C
+# Install script for directory: C:/Users/Lenovo/Downloads/Multimedia/C
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "C:/Users/a2705/Desktop/Universidade/C/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "C:/Users/Lenovo/Downloads/Multimedia/C/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
