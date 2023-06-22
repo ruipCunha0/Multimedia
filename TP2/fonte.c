@@ -24,7 +24,6 @@ int main(int argc, char *argv[]) {
 
     int F;
     int N;
-    int P = 0;
 
     // Get F value
     printf("Set number for F: ");
@@ -69,18 +68,19 @@ int main(int argc, char *argv[]) {
     }
 
     int index = 0;
+    int P = 0;
 
     while (true) {
-
+        P = 0;
         for (int counter = 1; counter <= Fa; counter++) {
             double t = (double) counter / Fa;
             int i = (rand() % Fa) + 1;
             double sample = 1 + (1 + sin(2 * PI * t / N)) * 30;
 
-            sprintf(buffer, "%s|%d|%d|%d|%d|%d|%d|", id_string, i, (int) sample, P, F, N, Fa);
+            sprintf(buffer, "%s|%d|%d|%d|%d|%d|%d|", id_string, i, (int) sample, P++, F, N, Fa);
             send(client_fd, buffer, 25, 0);
 
-            sleep(1);
+            sleep((1 % Fa));
         }
         index++;
     }

@@ -5,10 +5,31 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <stdbool.h>
+#include <pthread.h>
 
 #define PORT 5005
 #define BUFFER_SIZE 1024
 
+
+
+void *play_thread(void *arg) {
+    int socket = *(int*)arg;
+    char buffer_to_receive[BUFFER_SIZE];
+    bool condition = true;
+
+    while (condition) {
+        if(recvfrom(socket, buffer_to_receive, BUFFER_SIZE, 0, NULL, 0) < 0) {
+            perror("ERROR!");
+            exit(0);
+        }
+        if (strcmp(buffer_to_receive, "stop") == 0)
+            condition = false;
+
+        printf("%s \n", buffer_to_receive);
+    }
+    pthread_exit(NULL);
+}
 
 // run code: ./client
 int main(int argc, char *argv[]) {
@@ -21,6 +42,10 @@ int main(int argc, char *argv[]) {
     char buffer[1024];
     char input_string[560];
     char buffer_to_receive[BUFFER_SIZE];
+
+    pid_t pid;
+
+    pthread_t thread;
 
     while (1) {
 
@@ -69,7 +94,7 @@ int main(int argc, char *argv[]) {
 
                             sendto(client_socket, buffer, 5, 0, (struct sockaddr *) &serv_addr, serv_addr_len);
 
-                            if(recvfrom(client_socket, buffer_to_receive, BUFFER_SIZE, 0, (struct sockaddr*)&serv_addr, &serv_addr_len) < 0) {
+                            if(recvfrom(client_socket, buffer_to_receive, BUFFER_SIZE, 0, NULL, 0) < 0) {
                                 perror("ERROR!");
                                 return -1;
                             }
@@ -79,7 +104,7 @@ int main(int argc, char *argv[]) {
                             token = strtok(NULL, "|");
 
                             for (size_t i = 0; i < atoi(token); i++) {
-                                if(recvfrom(client_socket, buffer_to_receive, BUFFER_SIZE, 0, (struct sockaddr*)&serv_addr, &serv_addr_len) < 0) {
+                                if(recvfrom(client_socket, buffer_to_receive, BUFFER_SIZE, 0, NULL, 0) < 0) {
                                     perror("ERROR!");
                                     return -1;
                                 }
@@ -98,7 +123,7 @@ int main(int argc, char *argv[]) {
                             printf("O canal escolhido é: %s\n", input_string);
 
                             sprintf(buffer, "info %s", input_string);
-                            send(client_socket, buffer, 5 + strlen(input_string), 0);
+                            sendto(client_socket, buffer, 5, 0, (struct sockaddr *) &serv_addr, serv_addr_len);
 
                             break;
 
@@ -110,7 +135,28 @@ int main(int argc, char *argv[]) {
                             printf("O canal escolhido é: %s\n", input_string);
 
                             sprintf(buffer, "play %s", input_string);
-                            send(client_socket, buffer, 5 + strlen(input_string), 0);
+                            sendto(client_socket, buffer, 15, 0, (struct sockaddr *) &serv_addr, serv_addr_len);
+
+                            pid = fork();
+
+                            if (pid < 0) {
+                                perror("Pid failed!");
+                                exit(0);
+                            } else if (pid == 0) {
+                                // Child process
+
+                                while (true) {
+                                    if(recvfrom(client_socket, buffer_to_receive, BUFFER_SIZE, 0, NULL, 0) < 0) {
+                                        perror("ERROR!");
+                                        exit(0);
+                                    }
+
+                                    printf("%s \n", buffer_to_receive);
+                                }
+
+                            } else {
+
+                            }
 
                             break;
 
@@ -122,8 +168,14 @@ int main(int argc, char *argv[]) {
                             printf("O canal escolhido é: %s\n", input_string);
 
                             sprintf(buffer, "stop %s", input_string);
-                            send(client_socket, buffer, 5 + strlen(input_string), 0);
+                            sendto(client_socket, buffer, 5, 0, (struct sockaddr *) &serv_addr, serv_addr_len);
 
+                            if(recvfrom(client_socket, buffer_to_receive, BUFFER_SIZE, 0, NULL, 0) < 0) {
+                                perror("ERROR!");
+                                exit(0);
+                            }
+
+                            printf("%s \n", buffer_to_receive);
                             break;
 
                         case 5:

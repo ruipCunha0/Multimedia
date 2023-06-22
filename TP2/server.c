@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <signal.h>
 
 #define PORT_SOURCE 5000
 #define PORT_CLIENT 5005
@@ -13,6 +14,7 @@
 
 typedef struct {
     char content[BUFFER_SIZE];
+    bool read;
     int F;
     int N;
     int M;
@@ -29,7 +31,7 @@ pthread_mutex_t mutex;
 
 void *play_Source(void *args) {
 
-
+    int channel = *(int *)args;
 
 
 
@@ -67,6 +69,7 @@ void *source_Thread(void *args) {
             }
 
             strcpy(src[index].content, buffer);
+            src[index].read = false;
             printf("%s \n", src[index].content);
 
             condition = false;
@@ -86,8 +89,9 @@ void *client_Thread(void *args) {
     char buffer[BUFFER_SIZE];
     char buffer_to_send[BUFFER_SIZE];
     char *token;
+    pid_t pid;
 
-    pthread_t play_thread;
+    pthread_t play_thread = 0;
 
     // Define the server address for source
     struct sockaddr_in server_address_clients;
@@ -106,13 +110,12 @@ void *client_Thread(void *args) {
 
     while (true) {
 
-        while (recvfrom(socket, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &clientAddress, &clientAddressLength) !=
-               0) {
+        while (recvfrom(socket, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &clientAddress, &clientAddressLength) != 0) {
             char *copy = strdup(buffer);
             token = strtok(copy, " ");
             printf("%s\n", token);
 
-            if (strcmp(token, "list") == 0) {
+            if (strcmp(token, "list") == 0) {   // If data received is "list"
 
                 // Lock mutex to store content
                 pthread_mutex_lock(&mutex);
@@ -136,16 +139,75 @@ void *client_Thread(void *args) {
 
                 pthread_mutex_unlock(&mutex);
 
-            } else if (strcmp(token, "info") == 0) {
+            } else if (strcmp(token, "info") == 0) {    // If data received is "info (D)"
 
                 token = strtok(NULL, " ");
 
-                // Create thread to play source to the client
-                if (pthread_create(&play_thread, NULL, play_thread, (void *) token) != 0) {
-                    perror("Error creating thread");
-                    return 0;
+
+
+            } else if (strcmp(token, "play") == 0) {    // If data received is "play (D)"
+                int index = 0;
+                token = strtok(NULL, " ");
+
+                pid = fork();
+
+                if (pid < 0) {
+                    perror("Pid failed!");
+                    exit(0);
+                } else if (pid == 0) {
+                    // Child process
+
+                    // Lock mutex to store content
+                    pthread_mutex_lock(&mutex);
+
+                    for (int i = 0; i < num_sources; i++) {
+                        if (strcmp(channel_id[i], token) == 0) {
+                            index = i;
+                        }
+                    }
+
+                    // Unlock mutex to store content
+                    pthread_mutex_unlock(&mutex);
+
+                    while (true) {
+
+                        // Lock mutex to store content
+                        pthread_mutex_lock(&mutex);
+
+                        if (src[index].read == false)
+                            strcpy(buffer_to_send, src[index].content);
+
+                        if (sendto(socket, buffer_to_send, sizeof(buffer_to_send), 0, (struct sockaddr *) &clientAddress,
+                                   clientAddressLength) == -1) {
+                            perror("ERROR!");
+                            exit(0);
+                        }
+
+                        src[index].read = true;
+                        pthread_mutex_unlock(&mutex);
+
+                        sleep((unsigned int) 0.1);
+                    }
+
+                } else {
+
+
                 }
 
+
+
+            } else if (strcmp(token, "stop") == 0) {    // If data received is "stop (D)"
+
+                if(kill(pid, SIGKILL) == 0) {
+                    printf("Process killed!");
+                }
+
+                sprintf(buffer_to_send,"response-stop");
+                if (sendto(socket, buffer_to_send, sizeof(buffer_to_send), 0, (struct sockaddr *) &clientAddress,
+                           clientAddressLength) == -1) {
+                    perror("ERROR!");
+                    exit(0);
+                }
             }
 
 
