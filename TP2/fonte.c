@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define PI 3.14159265
 
@@ -66,13 +67,18 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    for (int i = 0; i <= Fa; i++) {
-        double t = (double)i / Fa;
-        double sample = 1 + (1 + sin(2 * PI * t / N)) * 30;
+    while(true) {
+        for (int i = 1; i <= Fa; i++) {
+            double t = (double)i / Fa;
+            double sample = 1 + (1 + sin(2 * PI * t / N)) * 30;
 
-        sprintf(buffer, "%s|%d|%d|%d|%d|%d|%d|", id_string, i, (int) sample, P, F, N, M);
-        send(client_fd, buffer, 25, 0);
+            sprintf(buffer, "%s|%d|%d|%d|%d|%d|%d|", id_string, i, (int) sample, P, F, N, M);
+            send(client_fd, buffer, 25, 0);
+
+            sleep(1);
+        }
     }
+
 
     // closing the connected socket
     close(client_fd);

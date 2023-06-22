@@ -6,27 +6,21 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <pthread.h>
-#include <arpa/inet.h>
 
 #define PORT_SOURCE 5000
 #define PORT_CLIENT 5005
 #define BUFFER_SIZE 1024
 
-int clientCount = 0;
+int num_sources = 0;
+char *channel_id[5];
 pthread_mutex_t mutex;
-
-// Struct to store source data
-typedef struct {
-    int socket;
-    struct sockaddr_in address;
-} ClientInfo;
-
-
 
 void *source_Thread(void *args) {
 
     int socket = *(int *)args;
     char buffer[BUFFER_SIZE];
+    char *token;
+    bool condition = false;
 
     printf("Server listening on port %d...\n", PORT_SOURCE);
 
@@ -35,6 +29,20 @@ void *source_Thread(void *args) {
         while(read(socket, buffer, BUFFER_SIZE) != 0) {
 
             printf("%s\n", buffer);
+            token = strtok(buffer, "|");
+
+            // Lock mutex to store content
+            pthread_mutex_lock(&mutex);
+            for (int i = 0; i < num_sources; i++) {
+                if (strcmp(channel_id[i], token) == 0)
+                    condition = true;
+            }
+
+            if (condition == false) {
+                channel_id[num_sources] = token;
+                num_sources++;
+            }
+            pthread_mutex_unlock(&mutex);
 
         }
 
@@ -48,6 +56,8 @@ void *client_Thread(void *args) {
 
     int socket = *(int *)args;
     char buffer[BUFFER_SIZE];
+    char buffer_to_send[BUFFER_SIZE];
+    char *token;
 
     printf("Server listening on port %d...\n", PORT_CLIENT);
 
@@ -55,7 +65,30 @@ void *client_Thread(void *args) {
 
         while(read(socket, buffer, BUFFER_SIZE) != 0) {
 
-            printf("%s\n", buffer);
+            token = strtok(buffer, " ");
+            printf("%s\n", token);
+
+            if (strcmp(token, "list") == 0) {
+
+                // Lock mutex to store content
+                pthread_mutex_lock(&mutex);
+                for (int i = 0; i < num_sources; i++) {
+                    printf("HERE! %d and %s \n", num_sources, channel_id[i]);
+                    sprintf(buffer_to_send, "%s", channel_id[i]);
+                    if(sendto(socket, buffer_to_send, 20, 0, NULL, 0) == -1) {
+                        perror("ERROR!");
+                        exit(0);
+                    }
+
+                }
+                pthread_mutex_unlock(&mutex);
+
+            }
+
+
+
+
+
 
         }
 

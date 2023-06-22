@@ -1,3 +1,3 @@
-C:/Users/Lenovo/Documents/Multimedia/TP2/cmake-build-debug/CMakeFiles/TP2.dir
-C:/Users/Lenovo/Documents/Multimedia/TP2/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/Lenovo/Documents/Multimedia/TP2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/rui/Desktop/Multimedia/TP2/cmake-build-debug/CMakeFiles/TP2.dir
+/home/rui/Desktop/Multimedia/TP2/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/rui/Desktop/Multimedia/TP2/cmake-build-debug/CMakeFiles/rebuild_cache.dir

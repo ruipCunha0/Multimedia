@@ -18,8 +18,8 @@ int main(int argc, char *argv[]) {
     int valread;
     struct sockaddr_in serv_addr;
     char buffer[1024];
-    char input_string[BUFFER_SIZE];
-    char buffer_to_receive[BUFFER_SIZE]
+    char input_string[560];
+    char buffer_to_receive[BUFFER_SIZE];
 
     while (1) {
 
@@ -46,11 +46,7 @@ int main(int argc, char *argv[]) {
                     return -1;
                 }
 
-                // Connect to server socket
-                if ((status = connect(client_socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr))) < 0) {
-                    printf("\nConnection Failed \n");
-                    return -1;
-                }
+                socklen_t *len;
 
                 while (1) {
 
@@ -69,14 +65,10 @@ int main(int argc, char *argv[]) {
                         case 1:
                             sprintf(buffer, "list");
 
-                            // Remove the final char (\n)
-                            if (input_string[strlen(input_string) - 1] == '\n') {
-                                input_string[strlen(input_string) - 1] = '\0';
-                            }
+                            sendto(client_socket, buffer, 5, MSG_CONFIRM, (const struct sockaddr *) &serv_addr, sizeof(serv_addr));
 
-                            send(client_socket, buffer, 5, 0);
+                            while(read(client_socket, buffer_to_receive, BUFFER_SIZE) != 0);
 
-                            read(client_socket, buffer_to_receive, BUFFER_SIZE)
                             printf("%s\n", buffer_to_receive);
 
                             break;
