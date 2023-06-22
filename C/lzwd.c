@@ -145,13 +145,13 @@ int main(__attribute__((unused)) int argc, char **argv) {
     clock_t time_start = clock();
 
 
-    FILE *input_fp = fopen("C:\\Users\\Lenovo\\Downloads\\Multimedia\\C\\files\\example.txt", "rb");
+    FILE *input_fp = fopen("/home/rui/Desktop/Multimedia/C/files/livro_3.pdf", "rb");
     if (input_fp == NULL) {
         printf("Error: could not open input file '%s'\n", argv[1]);
         return 1;
     }
 
-    FILE *output_fp = fopen("C:\\Users\\Lenovo\\Downloads\\Multimedia\\C\\files\\output.txt.lzwd", "w");
+    FILE *output_fp = fopen("/home/rui/Desktop/Multimedia/C/files/output.txt.lzwd", "w");
     if (output_fp == NULL) {
         printf("Error: could not open output file '%s'\n", argv[2]);
         return 1;
@@ -170,6 +170,7 @@ int main(__attribute__((unused)) int argc, char **argv) {
     // Initialize a counter to work as an index of the position in the block array
     size_t counter;
     char block[MAX_DICT_SIZE];
+    char *copy;
     int code_output;
 
     lzwd_t Pa;
@@ -298,7 +299,8 @@ int main(__attribute__((unused)) int argc, char **argv) {
             }
 
             counter += Pb.size;
-            memcpy(&Pa, &Pb, sizeof(lzwd_t));
+            copy = strdup(Pb.value);
+            memcpy(&Pa.value, &copy, sizeof(copy));
 
         }
 
