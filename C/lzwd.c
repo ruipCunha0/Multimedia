@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
-
+#include <string.h>
 
 #define MAX_DICT_SIZE 65536
 
@@ -82,7 +82,7 @@ int find_dictionary_sequence(lzwd_t map, byte_t pattern, size_t size_of_pattern)
 // Search in the dictionary if the pattern Pa + Pb exists
 int search_dictionary_pattern(lzwd_t Pa, lzwd_t Pb) {
     lzwd_t temp_pattern;
-    temp_pattern.value = (byte_t*) malloc(sizeof (byte_t) * (Pa.size + Pb.size) * 500);
+    temp_pattern.value = (byte_t*) malloc(sizeof (byte_t) * (Pa.size + Pb.size));
     if(temp_pattern.value == NULL) {
         printf("\nError! memory not allocated.");
         exit(0);
@@ -145,7 +145,7 @@ int main(__attribute__((unused)) int argc, char **argv) {
     clock_t time_start = clock();
 
 
-    FILE *input_fp = fopen("C:\\Users\\Lenovo\\Downloads\\Multimedia\\C\\files\\livro_2.pdf", "rb");
+    FILE *input_fp = fopen("C:\\Users\\Lenovo\\Downloads\\Multimedia\\C\\files\\example.txt", "rb");
     if (input_fp == NULL) {
         printf("Error: could not open input file '%s'\n", argv[1]);
         return 1;
@@ -185,7 +185,7 @@ int main(__attribute__((unused)) int argc, char **argv) {
         counter = 0;
 
         // Initialize Pa with the first byte of the block
-        Pa.value = (byte_t *) malloc(sizeof(byte_t) * 500);
+        Pa.value = (byte_t *) malloc(sizeof(byte_t) * 10);
         if(Pa.value == NULL) {
             printf("\nError! memory not allocated.");
             exit(0);
@@ -199,11 +199,12 @@ int main(__attribute__((unused)) int argc, char **argv) {
         while (counter < block_size) {
 
             // Creates a Pb variable and allocates memory to it
-            Pb.value = (byte_t *) malloc(sizeof(byte_t) * 500);
+            Pb.value = (byte_t *) malloc(sizeof(byte_t) * 100);
             if(Pb.value == NULL) {
                 printf("\nError! memory not allocated.");
                 exit(0);
             }
+
             Pb.size = 1;
             Pb.value[0] = block[counter];
 
@@ -238,20 +239,18 @@ int main(__attribute__((unused)) int argc, char **argv) {
             fprintf(output_fp, "%d", code_output);
             fprintf(output_fp, ",");
 
-            printf("\n Counter: %zu", counter);
+            printf("\n Counter: %zu and dic_size: %zu", counter, dict_size);
 
             // Add the pattern in dictionary
             if (dict_size < MAX_DICT_SIZE) {
                 int index = 1;
 
                 while (index <= j) {
+
                     Pb.size = index;
                     if ((search_dictionary_pattern(Pa, Pb) == -1)) {
 
-                        if (counter == 39139)
-                            printf("\n Size: %zu", (Pa.size + Pb.size));
-
-                        dictionary[dict_size].value = (byte_t *) malloc(sizeof(byte_t) * (Pa.size + Pb.size));
+                        dictionary[dict_size].value = (byte_t *) malloc(sizeof(byte_t) * (Pa.size + Pb.size) * 10);
                         if(dictionary[dict_size].value == NULL) {
                             printf("\nError! memory not allocated.");
                             exit(0);
@@ -294,14 +293,16 @@ int main(__attribute__((unused)) int argc, char **argv) {
                     return 0;
                 }
 
+                dict_size = 0;
+
             }
 
             counter += Pb.size;
-            Pa = Pb;
+            memcpy(&Pa, &Pb, sizeof(lzwd_t));
 
         }
 
-        free(Pb.value);
+        free(Pa.value);
 
     }
 
