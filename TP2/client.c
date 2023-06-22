@@ -17,6 +17,7 @@ int main(int argc, char *argv[]) {
     int status;
     int valread;
     struct sockaddr_in serv_addr;
+    socklen_t serv_addr_len = sizeof(serv_addr);
     char buffer[1024];
     char input_string[560];
     char buffer_to_receive[BUFFER_SIZE];
@@ -34,7 +35,7 @@ int main(int argc, char *argv[]) {
 
             case 1:
                 // Create Socket
-                if ((client_socket = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+                if ((client_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
                     printf("\n Socket creation error \n");
                     return -1;
                 }
@@ -65,9 +66,12 @@ int main(int argc, char *argv[]) {
                         case 1:
                             sprintf(buffer, "list");
 
-                            sendto(client_socket, buffer, 5, MSG_CONFIRM, (const struct sockaddr *) &serv_addr, sizeof(serv_addr));
+                            sendto(client_socket, buffer, 5, 0, (struct sockaddr *) &serv_addr, serv_addr_len);
 
-                            while(read(client_socket, buffer_to_receive, BUFFER_SIZE) != 0);
+                            if(recvfrom(client_socket, buffer_to_receive, BUFFER_SIZE, 0, (struct sockaddr*)&serv_addr, &serv_addr_len) < 0) {
+                                perror("ERROR!");
+                                return -1;
+                            }
 
                             printf("%s\n", buffer_to_receive);
 
