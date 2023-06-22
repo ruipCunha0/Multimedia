@@ -73,7 +73,19 @@ int main(int argc, char *argv[]) {
                                 return -1;
                             }
 
-                            printf("%s\n", buffer_to_receive);
+                            char *copy = strdup(buffer_to_receive);
+                            char *token = strtok(copy, "|");
+                            token = strtok(NULL, "|");
+
+                            for (size_t i = 0; i < atoi(token); i++) {
+                                if(recvfrom(client_socket, buffer_to_receive, BUFFER_SIZE, 0, (struct sockaddr*)&serv_addr, &serv_addr_len) < 0) {
+                                    perror("ERROR!");
+                                    return -1;
+                                }
+
+                                printf("%s\n", buffer_to_receive);
+                            }
+
 
                             break;
 

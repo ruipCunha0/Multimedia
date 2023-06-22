@@ -19,7 +19,6 @@ void *source_Thread(void *args) {
 
     int socket = *(int *)args;
     char buffer[BUFFER_SIZE];
-    char *token;
     bool condition = false;
 
     printf("Server listening on port %d...\n", PORT_SOURCE);
@@ -27,21 +26,26 @@ void *source_Thread(void *args) {
     while(true) {
 
         while(read(socket, buffer, BUFFER_SIZE) != 0) {
+            char *copy = strdup(buffer);
+            char *token = strtok(copy, "|");
 
             printf("%s\n", buffer);
-            token = strtok(buffer, "|");
 
             // Lock mutex to store content
             pthread_mutex_lock(&mutex);
             for (int i = 0; i < num_sources; i++) {
-                if (strcmp(channel_id[i], token) == 0)
+                if (strcmp(channel_id[i], token) == 0) {
                     condition = true;
+                }
             }
 
             if (condition == false) {
                 channel_id[num_sources] = token;
                 num_sources++;
+                printf("Num_sources: %d \n", num_sources);
             }
+
+            condition = false;
             pthread_mutex_unlock(&mutex);
 
         }
@@ -87,15 +91,22 @@ void *client_Thread(void *args) {
 
                 // Lock mutex to store content
                 pthread_mutex_lock(&mutex);
-                for (int i = 0; i < num_sources; i++) {
-                    printf("HERE! %d and %s \n", num_sources, channel_id[i]);
-                    sprintf(buffer_to_send, "%s", channel_id[i]);
+
+                sprintf(buffer_to_send, "response-list|%d", num_sources);
+                if(sendto(socket, buffer_to_send, 16, 0, (struct sockaddr*)&clientAddress, clientAddressLength) == -1) {
+                    perror("ERROR!");
+                    exit(0);
+                }
+
+                for (size_t i = 0; i < (size_t) num_sources; i++) {
+                    sprintf(buffer_to_send, "%zu. %s", (i + 1), channel_id[i]);
                     if(sendto(socket, buffer_to_send, 20, 0, (struct sockaddr*)&clientAddress, clientAddressLength) == -1) {
                         perror("ERROR!");
                         exit(0);
                     }
 
                 }
+
                 pthread_mutex_unlock(&mutex);
 
             }
