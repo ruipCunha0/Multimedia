@@ -60,6 +60,7 @@ int main(int argc, char *argv[]) {
 
                     int choice_2;
                     scanf("%d", &choice_2);
+                    printf("\n");
 
                     switch (choice_2) {
 

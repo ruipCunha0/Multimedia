@@ -11,59 +11,83 @@
 #define PORT_CLIENT 5005
 #define BUFFER_SIZE 1024
 
+typedef struct {
+    char content[BUFFER_SIZE];
+    int F;
+    int N;
+    int M;
+} source;
+
+source src[5];
+
 int num_sources = 0;
 char *channel_id[5];
 pthread_mutex_t mutex;
 
+
+
+
+void *play_Source(void *args) {
+
+
+
+
+
+}
+
 void *source_Thread(void *args) {
 
-    int socket = *(int *)args;
+    int socket = *(int *) args;
     char buffer[BUFFER_SIZE];
     bool condition = false;
 
     printf("Server listening on port %d...\n", PORT_SOURCE);
 
-    while(true) {
+    while (true) {
 
-        while(read(socket, buffer, BUFFER_SIZE) != 0) {
+        while (read(socket, buffer, BUFFER_SIZE) != 0) {
             char *copy = strdup(buffer);
             char *token = strtok(copy, "|");
-
-            printf("%s\n", buffer);
+            int index = 0;
 
             // Lock mutex to store content
             pthread_mutex_lock(&mutex);
+
             for (int i = 0; i < num_sources; i++) {
                 if (strcmp(channel_id[i], token) == 0) {
                     condition = true;
+                    index = i;
                 }
             }
-
             if (condition == false) {
                 channel_id[num_sources] = token;
                 num_sources++;
+                index = num_sources;
                 printf("Num_sources: %d \n", num_sources);
             }
 
+            strcpy(src[index].content, buffer);
+            printf("%s \n", src[index].content);
+
             condition = false;
             pthread_mutex_unlock(&mutex);
-
         }
 
     }
-
     pthread_exit(NULL);
 }
 
 
 void *client_Thread(void *args) {
 
-    int socket = *(int *)args;
+    int socket = *(int *) args;
     struct sockaddr_in clientAddress;
     socklen_t clientAddressLength = sizeof(clientAddress);
     char buffer[BUFFER_SIZE];
     char buffer_to_send[BUFFER_SIZE];
     char *token;
+
+    pthread_t play_thread;
 
     // Define the server address for source
     struct sockaddr_in server_address_clients;
@@ -72,7 +96,7 @@ void *client_Thread(void *args) {
     server_address_clients.sin_addr.s_addr = INADDR_ANY;
 
     // Bind the socket_clients to the specified address and port
-    if (bind(socket, (struct sockaddr*)&server_address_clients, sizeof(server_address_clients)) < 0) {
+    if (bind(socket, (struct sockaddr *) &server_address_clients, sizeof(server_address_clients)) < 0) {
         perror("Failed to bind socket_clients");
         exit(EXIT_FAILURE);
     }
@@ -80,11 +104,12 @@ void *client_Thread(void *args) {
     printf("Server listening on port %d...\n", PORT_CLIENT);
 
 
-    while(true) {
+    while (true) {
 
-        while(recvfrom(socket, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&clientAddress, &clientAddressLength) != 0) {
-
-            token = strtok(buffer, " ");
+        while (recvfrom(socket, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &clientAddress, &clientAddressLength) !=
+               0) {
+            char *copy = strdup(buffer);
+            token = strtok(copy, " ");
             printf("%s\n", token);
 
             if (strcmp(token, "list") == 0) {
@@ -93,14 +118,16 @@ void *client_Thread(void *args) {
                 pthread_mutex_lock(&mutex);
 
                 sprintf(buffer_to_send, "response-list|%d", num_sources);
-                if(sendto(socket, buffer_to_send, 16, 0, (struct sockaddr*)&clientAddress, clientAddressLength) == -1) {
+                if (sendto(socket, buffer_to_send, 16, 0, (struct sockaddr *) &clientAddress, clientAddressLength) ==
+                    -1) {
                     perror("ERROR!");
                     exit(0);
                 }
 
                 for (size_t i = 0; i < (size_t) num_sources; i++) {
                     sprintf(buffer_to_send, "%zu. %s", (i + 1), channel_id[i]);
-                    if(sendto(socket, buffer_to_send, 20, 0, (struct sockaddr*)&clientAddress, clientAddressLength) == -1) {
+                    if (sendto(socket, buffer_to_send, 20, 0, (struct sockaddr *) &clientAddress,
+                               clientAddressLength) == -1) {
                         perror("ERROR!");
                         exit(0);
                     }
@@ -109,11 +136,17 @@ void *client_Thread(void *args) {
 
                 pthread_mutex_unlock(&mutex);
 
+            } else if (strcmp(token, "info") == 0) {
+
+                token = strtok(NULL, " ");
+
+                // Create thread to play source to the client
+                if (pthread_create(&play_thread, NULL, play_thread, (void *) token) != 0) {
+                    perror("Error creating thread");
+                    return 0;
+                }
+
             }
-
-
-
-
 
 
         }
@@ -153,7 +186,7 @@ int main(int argc, char const *argv[]) {
 
 
     // Bind the socket_source to the specified address and port
-    if (bind(*socket_source, (struct sockaddr*)&server_address_source, sizeof(server_address_source)) < 0) {
+    if (bind(*socket_source, (struct sockaddr *) &server_address_source, sizeof(server_address_source)) < 0) {
         perror("Failed to bind socket_source");
         exit(EXIT_FAILURE);
     }
@@ -162,13 +195,13 @@ int main(int argc, char const *argv[]) {
     pthread_t client_thread;
 
     // Create thread for source
-    if(pthread_create(&source_thread, NULL, source_Thread, (void *)socket_source) != 0) {
+    if (pthread_create(&source_thread, NULL, source_Thread, (void *) socket_source) != 0) {
         perror("Error creating thread");
         return 0;
     }
 
     // Create thread for clients
-    if(pthread_create(&client_thread, NULL, client_Thread, (void *)socket_clients) != 0) {
+    if (pthread_create(&client_thread, NULL, client_Thread, (void *) socket_clients) != 0) {
         perror("Error creating thread");
         return 0;
     }

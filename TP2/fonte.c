@@ -6,6 +6,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 
 #define PI 3.14159265
 
@@ -24,7 +25,6 @@ int main(int argc, char *argv[]) {
     int F;
     int N;
     int P = 0;
-    int M = 0;
 
     // Get F value
     printf("Set number for F: ");
@@ -47,6 +47,7 @@ int main(int argc, char *argv[]) {
     int status, valread, client_fd;
     struct sockaddr_in serv_addr;
     char buffer[1024];
+    srand((unsigned) time(NULL));
 
     // Create Socket
     if ((client_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -62,21 +63,26 @@ int main(int argc, char *argv[]) {
     }
 
     // Connect to server socket
-    if ((status = connect(client_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr))) < 0) {
+    if ((status = connect(client_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr))) < 0) {
         printf("\nConnection Failed \n");
         return -1;
     }
 
-    while(true) {
-        for (int i = 1; i <= Fa; i++) {
-            double t = (double)i / Fa;
+    int index = 0;
+
+    while (true) {
+
+        for (int counter = 1; counter <= Fa; counter++) {
+            double t = (double) counter / Fa;
+            int i = (rand() % Fa) + 1;
             double sample = 1 + (1 + sin(2 * PI * t / N)) * 30;
 
-            sprintf(buffer, "%s|%d|%d|%d|%d|%d|%d|", id_string, i, (int) sample, P, F, N, M);
+            sprintf(buffer, "%s|%d|%d|%d|%d|%d|%d|", id_string, i, (int) sample, P, F, N, Fa);
             send(client_fd, buffer, 25, 0);
 
             sleep(1);
         }
+        index++;
     }
 
 
