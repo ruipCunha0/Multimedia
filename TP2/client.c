@@ -178,22 +178,26 @@ int main(int argc, char *argv[]) {
                                         }
 
                                         copy = strdup(buffer_to_receive);
-                                        strtok(copy, "|");
+                                        strtok(copy, ",");
 
-                                        for (size_t i = 0; i < 6; i++) {
-                                            token = strtok(NULL, "|");
-                                            if (i == 1) {
-                                                Vi = atoi(token);
-                                            } else if (i == 5){
-                                                Fa = atoi(token);
+                                        if (strcmp(copy, id_string_client) == 0) {
+
+                                            for (size_t i = 0; i < 7; i++) {
+                                                token = strtok(NULL, "|");
+                                                if (i == 2) {
+                                                    Vi = atoi(token);
+                                                } else if (i == 6){
+                                                    Fa = atoi(token);
+                                                }
                                             }
+
+                                            for (size_t i = 0; i < Vi; i++)
+                                                printf("-");
+
+                                            printf("\n");
+                                            sleep(1 / Fa);
+
                                         }
-
-                                        for (size_t i = 0; i < Vi; i++)
-                                            printf("#");
-
-                                        printf("\n");
-                                        sleep(1 / Fa);
                                     }
 
                                 } else {
