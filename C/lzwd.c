@@ -6,6 +6,7 @@
 #include <string.h>
 
 #define MAX_DICT_SIZE 65536
+#define MAX_BLOCK_SIZE 65536
 
 typedef unsigned char byte_t; // 8-bit byte
 
@@ -82,8 +83,8 @@ int find_dictionary_sequence(lzwd_t map, byte_t pattern, size_t size_of_pattern)
 // Search in the dictionary if the pattern Pa + Pb exists
 int search_dictionary_pattern(lzwd_t Pa, lzwd_t Pb) {
     lzwd_t temp_pattern;
-    temp_pattern.value = (byte_t*) malloc(sizeof (byte_t) * (Pa.size + Pb.size));
-    if(temp_pattern.value == NULL) {
+    temp_pattern.value = (byte_t *) malloc(sizeof(byte_t) * (Pa.size + Pb.size));
+    if (temp_pattern.value == NULL) {
         printf("\nError! memory not allocated.");
         exit(0);
     }
@@ -113,12 +114,10 @@ int search_dictionary_pattern(lzwd_t Pa, lzwd_t Pb) {
 }
 
 
-
 // Function used to free the memory of the dictionary
-void free_map(lzwd_t map[])
-{
-    for (size_t i = 0; i < MAX_DICT_SIZE ; i++ ) {
-        if(map[i].value == NULL) {
+void free_map(lzwd_t map[]) {
+    for (size_t i = 0; i < MAX_DICT_SIZE; i++) {
+        if (map[i].value == NULL) {
             break;
         }
         free(map[i].value);
@@ -126,11 +125,10 @@ void free_map(lzwd_t map[])
 }
 
 
-
 // iterate over the dictionary to find the ID of the Pa pattern
 int find_Pa_code(lzwd_t Pa) {
 
-    for (int i = 0; i < dict_size; i++) {
+    for (int i = 0; i <= dict_size; i++) {
         if (equal_bytes(Pa, i)) {
             return i;
         }
@@ -145,13 +143,13 @@ int main(__attribute__((unused)) int argc, char **argv) {
     clock_t time_start = clock();
 
 
-    FILE *input_fp = fopen("/home/rui/Desktop/Multimedia/C/files/livro_3.pdf", "rb");
+    FILE *input_fp = fopen("/home/rui/Desktop/Multimedia/C/files/pdf.pdf", "rb");
     if (input_fp == NULL) {
         printf("Error: could not open input file '%s'\n", argv[1]);
         return 1;
     }
 
-    FILE *output_fp = fopen("/home/rui/Desktop/Multimedia/C/files/output.txt.lzwd", "w");
+    FILE *output_fp = fopen("/home/rui/Desktop/Multimedia/C/output.txt.lzwd", "wb");
     if (output_fp == NULL) {
         printf("Error: could not open output file '%s'\n", argv[2]);
         return 1;
@@ -166,10 +164,11 @@ int main(__attribute__((unused)) int argc, char **argv) {
     size_t block_size_total = 0;
     size_t number_of_blocks = 0;
     size_t dict_reset = 0;
+    size_t number_of_outputs = 0;
 
     // Initialize a counter to work as an index of the position in the block array
     size_t counter;
-    char block[MAX_DICT_SIZE];
+    char block[MAX_BLOCK_SIZE];
     char *copy;
     int code_output;
 
@@ -177,7 +176,7 @@ int main(__attribute__((unused)) int argc, char **argv) {
     lzwd_t Pb;
 
 
-    while ((block_size = fread(block, sizeof(char), MAX_DICT_SIZE, input_fp)) > 0) {
+    while ((block_size = fread(block, sizeof(char), MAX_BLOCK_SIZE, input_fp)) > 0) {
         printf("\n %zu", block_size);
         number_of_blocks++;
         block_size_total += block_size;
@@ -186,8 +185,8 @@ int main(__attribute__((unused)) int argc, char **argv) {
         counter = 0;
 
         // Initialize Pa with the first byte of the block
-        Pa.value = (byte_t *) malloc(sizeof(byte_t) * 10);
-        if(Pa.value == NULL) {
+        Pa.value = (byte_t *) malloc(sizeof(byte_t));
+        if (Pa.value == NULL) {
             printf("\nError! memory not allocated.");
             exit(0);
         }
@@ -200,8 +199,8 @@ int main(__attribute__((unused)) int argc, char **argv) {
         while (counter < block_size) {
 
             // Creates a Pb variable and allocates memory to it
-            Pb.value = (byte_t *) malloc(sizeof(byte_t) * 100);
-            if(Pb.value == NULL) {
+            Pb.value = (byte_t *) malloc(sizeof(byte_t));
+            if (Pb.value == NULL) {
                 printf("\nError! memory not allocated.");
                 exit(0);
             }
@@ -237,74 +236,74 @@ int main(__attribute__((unused)) int argc, char **argv) {
             }
 
             // Write the code to the output file
-            fprintf(output_fp, "%d", code_output);
-            fprintf(output_fp, ",");
+            fwrite(&code_output, sizeof(code_output), 1, output_fp);
+            fwrite(",", 1, 1, output_fp);
+            number_of_outputs++;
 
             printf("\n Counter: %zu and dic_size: %zu", counter, dict_size);
 
-            // Add the pattern in dictionary
-            if (dict_size < MAX_DICT_SIZE) {
-                int index = 1;
 
-                while (index <= j) {
+            int index = 1;
 
-                    Pb.size = index;
-                    if ((search_dictionary_pattern(Pa, Pb) == -1)) {
+            while (index <= j) {
 
-                        dictionary[dict_size].value = (byte_t *) malloc(sizeof(byte_t) * (Pa.size + Pb.size) * 10);
-                        if(dictionary[dict_size].value == NULL) {
-                            printf("\nError! memory not allocated.");
-                            exit(0);
-                        }
-                        dictionary[dict_size].size = Pa.size + Pb.size;
+                // Add the pattern in dictionary
+                if (dict_size == MAX_DICT_SIZE) {
 
-                        int i = 0;
+                    dict_reset++;
 
-                        for (int i_1 = 0; i_1 < Pa.size; i_1++) {
-                            dictionary[dict_size].value[i] = Pa.value[i_1];
-                            i++;
-                        }
-                        for (int i_2 = 0; i_2 < Pb.size; i_2++) {
-                            dictionary[dict_size].value[i] = Pb.value[i_2];
-                            i++;
-                        }
-
-                        /*
-                        printf("\n Pattern added to dictionary: ");
-                        for (int ind = 0; ind < dictionary[dict_size].size; ind++) {
-                            printf("%d", dictionary[dict_size].value[ind]);
-                        }
-                        */
-
-                        dict_size++;
-
+                    free_map(dictionary);
+                    // Creates the default dictionary
+                    if (!create_dictionary(dictionary)) {
+                        return 0;
                     }
 
-                    index++;
+                }
+
+                Pb.size = index;
+                if ((search_dictionary_pattern(Pa, Pb) == -1)) {
+
+                    dictionary[dict_size].value = (byte_t *) malloc(sizeof(byte_t));
+                    if (dictionary[dict_size].value == NULL) {
+                        printf("\nError! memory not allocated.");
+                        exit(0);
+                    }
+                    dictionary[dict_size].size = Pa.size + Pb.size;
+
+                    int i = 0;
+
+                    for (int i_1 = 0; i_1 < Pa.size; i_1++) {
+                        dictionary[dict_size].value[i] = Pa.value[i_1];
+                        i++;
+                    }
+                    for (int i_2 = 0; i_2 < Pb.size; i_2++) {
+                        dictionary[dict_size].value[i] = Pb.value[i_2];
+                        i++;
+                    }
+
+                    /*
+                    printf("\n Pattern added to dictionary: ");
+                    for (int ind = 0; ind < dictionary[dict_size].size; ind++) {
+                        printf("%d", dictionary[dict_size].value[ind]);
+                    }
+                    */
+
+                    dict_size++;
 
                 }
 
-            } else {
-
-                dict_reset++;
-
-                free_map(dictionary);
-                // Creates the default dictionary
-                if (!create_dictionary(dictionary)) {
-                    return 0;
-                }
-
-                dict_size = 0;
+                index++;
 
             }
+
 
             counter += Pb.size;
             copy = strdup(Pb.value);
             memcpy(&Pa.value, &copy, sizeof(copy));
 
+            free(Pa.value);
+            free(Pb.value);
         }
-
-        free(Pa.value);
 
     }
 
@@ -317,14 +316,15 @@ int main(__attribute__((unused)) int argc, char **argv) {
     }
 
     // Write the last code to the output file
-    fprintf(output_fp, "%d", code_output);
+    fwrite(&code_output, sizeof(code_output), 1, output_fp);
+    number_of_outputs++;
 
     free_map(dictionary);
     fclose(input_fp);
     fclose(output_fp);
 
     clock_t time = clock() - time_start;
-    double time_taken = ((double)time)/CLOCKS_PER_SEC; // calculate the elapsed time
+    double time_taken = ((double) time) / CLOCKS_PER_SEC; // calculate the elapsed time
 
     printf("\n Compression successful!");
     printf("\n ----------------------------------------");
@@ -335,6 +335,8 @@ int main(__attribute__((unused)) int argc, char **argv) {
     printf("\n Dictionary resets: %zu", dict_reset);
     printf("\n ----------------------------------------");
     printf("\n Size of dictionary: %zu", dict_size);
+    printf("\n ----------------------------------------");
+    printf("\n Number of outputs: %zu", number_of_outputs);
     printf("\n ----------------------------------------");
     printf("\n Time elapsed: %.2f seconds", time_taken);
     printf("\n ----------------------------------------");
