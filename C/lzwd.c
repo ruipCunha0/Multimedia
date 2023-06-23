@@ -4,11 +4,8 @@
 #include <stdint.h>
 #include <time.h>
 #include <string.h>
+#include "lzwd.h"
 
-#define MAX_DICT_SIZE 65536
-#define MAX_BLOCK_SIZE 65536
-
-typedef unsigned char byte_t; // 8-bit byte
 
 typedef struct {
     byte_t *value;
@@ -143,13 +140,13 @@ int main(__attribute__((unused)) int argc, char **argv) {
     clock_t time_start = clock();
 
 
-    FILE *input_fp = fopen("/home/rui/Desktop/Multimedia/C/files/pdf.pdf", "rb");
+    FILE *input_fp = fopen("C:\\Users\\Lenovo\\Documents\\Multimedia\\C\\files\\pdf.pdf", "rb");
     if (input_fp == NULL) {
         printf("Error: could not open input file '%s'\n", argv[1]);
         return 1;
     }
 
-    FILE *output_fp = fopen("/home/rui/Desktop/Multimedia/C/output.txt.lzwd", "wb");
+    FILE *output_fp = fopen("C:\\Users\\Lenovo\\Documents\\Multimedia\\C\\output.txt.lzwd", "wb");
     if (output_fp == NULL) {
         printf("Error: could not open output file '%s'\n", argv[2]);
         return 1;
@@ -240,13 +237,12 @@ int main(__attribute__((unused)) int argc, char **argv) {
             fwrite(",", 1, 1, output_fp);
             number_of_outputs++;
 
-            printf("\n Counter: %zu and dic_size: %zu", counter, dict_size);
+            // printf("\n Counter: %zu and dic_size: %zu", counter, dict_size);
 
 
             int index = 1;
 
             while (index <= j) {
-
                 // Add the pattern in dictionary
                 if (dict_size == MAX_DICT_SIZE) {
 
@@ -259,7 +255,6 @@ int main(__attribute__((unused)) int argc, char **argv) {
                     }
 
                 }
-
                 Pb.size = index;
                 if ((search_dictionary_pattern(Pa, Pb) == -1)) {
 
@@ -280,20 +275,9 @@ int main(__attribute__((unused)) int argc, char **argv) {
                         dictionary[dict_size].value[i] = Pb.value[i_2];
                         i++;
                     }
-
-                    /*
-                    printf("\n Pattern added to dictionary: ");
-                    for (int ind = 0; ind < dictionary[dict_size].size; ind++) {
-                        printf("%d", dictionary[dict_size].value[ind]);
-                    }
-                    */
-
                     dict_size++;
-
                 }
-
                 index++;
-
             }
 
 

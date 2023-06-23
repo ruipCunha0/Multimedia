@@ -3,4 +3,4 @@ project(C C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(C lzwd.c)
+add_executable(C lzwd.c lzwd.h)
