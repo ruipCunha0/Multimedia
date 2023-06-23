@@ -160,41 +160,45 @@ int main(int argc, char *argv[]) {
 
                             if (strcmp(buffer_to_receive, "channel does not exists...") == 0) {
                                 printf("%s \n", buffer_to_receive);
-                            }
+                            } else {
 
-                            pid = fork();
+                                pid = fork();
 
-                            if (pid < 0) {
-                                perror("Pid failed!");
-                                exit(0);
-                            } else if (pid == 0) {
-                                // Child process
-
-                                while (true) {
-                                    if(recvfrom(client_socket, buffer_to_receive, BUFFER_SIZE, 0, NULL, 0) < 0) {
-                                        perror("ERROR!");
-                                        exit(0);
-                                    }
-
-                                    copy = strdup(buffer_to_receive);
-                                    strtok(copy, "|");
-
-                                    for (size_t i = 0; i < 6; i++) {
-                                        token = strtok(NULL, "|");
-                                        if (i == 1) {
-                                            Vi = atoi(token);
-                                        } else if (i == 5){
-                                            Fa = atoi(token);
-                                        }
-                                    }
-
-                                    printf("%d", Vi);
+                                if (pid < 0) {
+                                    perror("Pid failed!");
+                                    exit(0);
+                                } else if (pid == 0) {
+                                    // Child process
 
                                     printf("\n");
-                                    sleep(1 / Fa);
-                                }
+                                    while (true) {
+                                        if(recvfrom(client_socket, buffer_to_receive, BUFFER_SIZE, 0, NULL, 0) < 0) {
+                                            perror("ERROR!");
+                                            exit(0);
+                                        }
 
-                            } else {
+                                        copy = strdup(buffer_to_receive);
+                                        strtok(copy, "|");
+
+                                        for (size_t i = 0; i < 6; i++) {
+                                            token = strtok(NULL, "|");
+                                            if (i == 1) {
+                                                Vi = atoi(token);
+                                            } else if (i == 5){
+                                                Fa = atoi(token);
+                                            }
+                                        }
+
+                                        for (size_t i = 0; i < Vi; i++)
+                                            printf("#");
+
+                                        printf("\n");
+                                        sleep(1 / Fa);
+                                    }
+
+                                } else {
+
+                                }
 
                             }
 
@@ -205,7 +209,7 @@ int main(int argc, char *argv[]) {
                             printf("Introduza o ID do canal: ");
                             scanf("%s", input_string);
 
-                            sprintf(buffer, "stop %s", input_string);
+                            sprintf(buffer, "stop %s %s", input_string, id_string_client);
                             sendto(client_socket, buffer, 5, 0, (struct sockaddr *) &serv_addr, serv_addr_len);
 
                             if(recvfrom(client_socket, buffer_to_receive, BUFFER_SIZE, 0, NULL, 0) < 0) {
@@ -213,7 +217,9 @@ int main(int argc, char *argv[]) {
                                 exit(0);
                             }
 
-                            printf("%s \n", buffer_to_receive);
+                            if(strcmp(buffer_to_receive, "response-stop") == 0)
+                                printf("%s \n", buffer_to_receive);
+
                             break;
 
                         case 5:
