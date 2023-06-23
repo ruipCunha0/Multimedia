@@ -13,7 +13,8 @@
 #define BUFFER_SIZE 1024
 
 typedef struct {
-    char content[BUFFER_SIZE];
+    char *content;
+    char *clients_id[5];
     bool read;
     int F;
     int N;
@@ -23,19 +24,11 @@ typedef struct {
 source src[5];
 
 int num_sources = 0;
+int num_clients = 0;
 char *channel_id[5];
+
 pthread_mutex_t mutex;
 
-
-
-
-void *play_Source(void *args) {
-
-    int channel = *(int *)args;
-
-
-
-}
 
 void *source_Thread(void *args) {
 
@@ -63,9 +56,6 @@ void *source_Thread(void *args) {
             }
             if (condition == false) {
                 channel_id[num_sources] = token;
-                num_sources++;
-                index = num_sources;
-                printf("Num_sources: %d \n", num_sources);
 
                 for (size_t j = 0; j < 6; j++) {
                     token = strtok(NULL, "|");
@@ -77,13 +67,16 @@ void *source_Thread(void *args) {
                         src[num_sources].M = atoi(token);
                     }
                 }
+
+                num_sources++;
+                index = num_sources;
+                printf("Num_sources: %d \n", num_sources);
             }
 
-            strcpy(src[index].content, buffer);
-            src[index].read = false;
-            printf("%s com F: %d e N: %d e M: %d \n", src[index].content, src[num_sources].F, src[num_sources].N, src[num_sources].M);
-
+            memcpy(src[index].content, buffer, sizeof(buffer));
             condition = false;
+
+            // Unlock mutex to store content
             pthread_mutex_unlock(&mutex);
         }
 
@@ -124,6 +117,7 @@ void *client_Thread(void *args) {
         while (recvfrom(socket, buffer, BUFFER_SIZE, 0, (struct sockaddr *) &clientAddress, &clientAddressLength) != 0) {
             char *copy = strdup(buffer);
             token = strtok(copy, " ");
+
             printf("%s\n", token);
 
             if (strcmp(token, "list") == 0) {   // If data received is "list"
@@ -148,17 +142,84 @@ void *client_Thread(void *args) {
 
                 }
 
+                // Unlock mutex to store content
                 pthread_mutex_unlock(&mutex);
 
             } else if (strcmp(token, "info") == 0) {    // If data received is "info (D)"
-
+                int index = 0;
                 token = strtok(NULL, " ");
 
+                // Lock mutex to store content
+                pthread_mutex_lock(&mutex);
+
+                for (int i = 0; i < num_sources; i++) {
+                    if (strcmp(channel_id[i], token) == 0) {
+                        index = i;
+                    }
+                }
+
+                sprintf(buffer_to_send, "response-info,(%s|%d|%d|%d)", channel_id[index], src[index].F, src[index].N, src[index].M);
+                if (sendto(socket, buffer_to_send, 35, 0, (struct sockaddr *) &clientAddress,
+                           clientAddressLength) == -1) {
+                    perror("ERROR!");
+                    exit(0);
+                }
+
+                // Unlock mutex to store content
+                pthread_mutex_unlock(&mutex);
 
 
             } else if (strcmp(token, "play") == 0) {    // If data received is "play (D)"
-                int index = 0;
+                int index = -1;
+                int index2 = 0;
                 token = strtok(NULL, " ");
+
+                // Lock mutex to store content
+                pthread_mutex_lock(&mutex);
+
+                for (int i = 0; i < num_sources; i++) {
+                    if (strcmp(channel_id[i], token) == 0) {
+                        index = i;
+                    }
+                }
+
+                // Unlock mutex to store content
+                pthread_mutex_unlock(&mutex);
+
+                if (index == -1) {
+                    sprintf(buffer_to_send, "channel does not exists...");
+                    if (sendto(socket, buffer_to_send, 30, 0, (struct sockaddr *) &clientAddress,
+                               clientAddressLength) == -1) {
+                        perror("ERROR!");
+                        exit(0);
+                    }
+                    break;
+                } else {
+                    sprintf(buffer_to_send, "response-play");
+                    if (sendto(socket, buffer_to_send, 30, 0, (struct sockaddr *) &clientAddress,
+                               clientAddressLength) == -1) {
+                        perror("ERROR!");
+                        exit(0);
+                    }
+                }
+
+                // Lock mutex to store content
+                pthread_mutex_lock(&mutex);
+
+                token = strtok(NULL, " ");
+
+                int i = 0;
+                do {
+                    if (src[index].clients_id[i] == NULL) {
+                        src[index].clients_id[i] = (char *) malloc(2);
+                        memcpy(src[index].clients_id[i], token, sizeof(&token));
+                        i = num_clients;    // Leave the loop
+                    }
+                }while (i < num_clients);
+
+
+                // Unlock mutex to store content
+                pthread_mutex_unlock(&mutex);
 
                 pid = fork();
 
@@ -168,25 +229,10 @@ void *client_Thread(void *args) {
                 } else if (pid == 0) {
                     // Child process
 
-                    // Lock mutex to store content
-                    pthread_mutex_lock(&mutex);
-
-                    for (int i = 0; i < num_sources; i++) {
-                        if (strcmp(channel_id[i], token) == 0) {
-                            index = i;
-                        }
-                    }
-
-                    // Unlock mutex to store content
-                    pthread_mutex_unlock(&mutex);
-
                     while (true) {
 
                         // Lock mutex to store content
                         pthread_mutex_lock(&mutex);
-
-                        if (src[index].read == false)
-                            strcpy(buffer_to_send, src[index].content);
 
                         if (sendto(socket, buffer_to_send, sizeof(buffer_to_send), 0, (struct sockaddr *) &clientAddress,
                                    clientAddressLength) == -1) {
@@ -194,7 +240,6 @@ void *client_Thread(void *args) {
                             exit(0);
                         }
 
-                        src[index].read = true;
                         pthread_mutex_unlock(&mutex);
 
                         sleep((unsigned int) 0.1);
@@ -220,7 +265,6 @@ void *client_Thread(void *args) {
                     exit(0);
                 }
             }
-
 
         }
 

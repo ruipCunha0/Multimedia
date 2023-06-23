@@ -34,18 +34,27 @@ void *play_thread(void *arg) {
 // run code: ./client
 int main(int argc, char *argv[]) {
 
+    if (argc < 2) {
+        perror("ERROR, not enough args!");
+        return 1;
+    }
+
+    // Receive string from argument
+    char *id_string_client = argv[1];
+
     int client_socket;
-    int status;
-    int valread;
     struct sockaddr_in serv_addr;
     socklen_t serv_addr_len = sizeof(serv_addr);
     char buffer[1024];
     char input_string[560];
     char buffer_to_receive[BUFFER_SIZE];
+    char *copy;
+    char *token;
+
+    int Vi, Fa;
 
     pid_t pid;
 
-    pthread_t thread;
 
     while (1) {
 
@@ -99,8 +108,8 @@ int main(int argc, char *argv[]) {
                                 return -1;
                             }
 
-                            char *copy = strdup(buffer_to_receive);
-                            char *token = strtok(copy, "|");
+                            copy = strdup(buffer_to_receive);
+                            strtok(copy, "|");
                             token = strtok(NULL, "|");
 
                             for (size_t i = 0; i < atoi(token); i++) {
@@ -120,10 +129,19 @@ int main(int argc, char *argv[]) {
                             printf("Introduza o ID do canal: ");
                             scanf("%s", input_string);
 
-                            printf("O canal escolhido é: %s\n", input_string);
-
                             sprintf(buffer, "info %s", input_string);
-                            sendto(client_socket, buffer, 5, 0, (struct sockaddr *) &serv_addr, serv_addr_len);
+                            sendto(client_socket, buffer, 15, 0, (struct sockaddr *) &serv_addr, serv_addr_len);
+
+                            if(recvfrom(client_socket, buffer_to_receive, BUFFER_SIZE, 0, NULL, 0) < 0) {
+                                perror("ERROR!");
+                                return -1;
+                            }
+
+                            copy = strdup(buffer_to_receive);
+                            strtok(copy, ",");
+                            token = strtok(NULL, ",");
+
+                            printf("%s \n", token);
 
                             break;
 
@@ -132,10 +150,17 @@ int main(int argc, char *argv[]) {
                             printf("Introduza o ID do canal: ");
                             scanf("%s", input_string);
 
-                            printf("O canal escolhido é: %s\n", input_string);
-
-                            sprintf(buffer, "play %s", input_string);
+                            sprintf(buffer, "play %s %s", input_string, id_string_client);
                             sendto(client_socket, buffer, 15, 0, (struct sockaddr *) &serv_addr, serv_addr_len);
+
+                            if(recvfrom(client_socket, buffer_to_receive, BUFFER_SIZE, 0, NULL, 0) < 0) {
+                                perror("ERROR!");
+                                exit(0);
+                            }
+
+                            if (strcmp(buffer_to_receive, "channel does not exists...") == 0) {
+                                printf("%s \n", buffer_to_receive);
+                            }
 
                             pid = fork();
 
@@ -151,7 +176,22 @@ int main(int argc, char *argv[]) {
                                         exit(0);
                                     }
 
-                                    printf("%s \n", buffer_to_receive);
+                                    copy = strdup(buffer_to_receive);
+                                    strtok(copy, "|");
+
+                                    for (size_t i = 0; i < 6; i++) {
+                                        token = strtok(NULL, "|");
+                                        if (i == 1) {
+                                            Vi = atoi(token);
+                                        } else if (i == 5){
+                                            Fa = atoi(token);
+                                        }
+                                    }
+
+                                    printf("%d", Vi);
+
+                                    printf("\n");
+                                    sleep(1 / Fa);
                                 }
 
                             } else {
@@ -164,8 +204,6 @@ int main(int argc, char *argv[]) {
 
                             printf("Introduza o ID do canal: ");
                             scanf("%s", input_string);
-
-                            printf("O canal escolhido é: %s\n", input_string);
 
                             sprintf(buffer, "stop %s", input_string);
                             sendto(client_socket, buffer, 5, 0, (struct sockaddr *) &serv_addr, serv_addr_len);
