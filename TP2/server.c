@@ -66,11 +66,22 @@ void *source_Thread(void *args) {
                 num_sources++;
                 index = num_sources;
                 printf("Num_sources: %d \n", num_sources);
+
+                for (size_t j = 0; j < 6; j++) {
+                    token = strtok(NULL, "|");
+                    if (j == 3) {
+                        src[num_sources].F = atoi(token);
+                    } else if (j == 4) {
+                        src[num_sources].N = atoi(token);
+                    } else if (j == 5) {
+                        src[num_sources].M = atoi(token);
+                    }
+                }
             }
 
             strcpy(src[index].content, buffer);
             src[index].read = false;
-            printf("%s \n", src[index].content);
+            printf("%s com F: %d e N: %d e M: %d \n", src[index].content, src[num_sources].F, src[num_sources].N, src[num_sources].M);
 
             condition = false;
             pthread_mutex_unlock(&mutex);

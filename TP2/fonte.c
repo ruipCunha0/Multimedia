@@ -70,17 +70,30 @@ int main(int argc, char *argv[]) {
     int index = 0;
     int P = 0;
 
+
+
     while (true) {
-        P = 0;
-        for (int counter = 1; counter <= Fa; counter++) {
-            double t = (double) counter / Fa;
-            int i = (rand() % Fa) + 1;
-            double sample = 1 + (1 + sin(2 * PI * t / N)) * 30;
+        P = 1;
+        if (index == 0) {
+            for (int counter = 1; counter <= Fa; counter++) {
+                int i = (rand() % Fa) + 1;
 
-            sprintf(buffer, "%s|%d|%d|%d|%d|%d|%d|", id_string, i, (int) sample, P++, F, N, Fa);
-            send(client_fd, buffer, 25, 0);
+                sprintf(buffer, "%s|%d|%d|%d|%d|%d|%d|", id_string, i, 0, P++, F, N, Fa);
+                send(client_fd, buffer, 25, 0);
 
-            sleep((1 % Fa));
+                sleep((1 / Fa));
+            }
+        } else {
+            for (int counter = 1; counter <= Fa; counter++) {
+                double t = (double) counter / Fa;
+                int i = (rand() % Fa) + 1;
+                double sample = 1 + (1 + sin(2 * PI * t / N)) * 30;
+
+                sprintf(buffer, "%s|%d|%d|%d|%d|%d|%d|", id_string, i, (int) sample, P++, F, N, Fa);
+                send(client_fd, buffer, 25, 0);
+
+                sleep((1 / Fa));
+            }
         }
         index++;
     }
