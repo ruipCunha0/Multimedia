@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
             for (int counter = 1; counter <= Fa; counter++) {
                 double t = (double) counter / Fa;
                 int i = (rand() % Fa) + 1;
-                double sample = 1 + (1 + sin(2 * PI * t / N)) * 30;
+                double sample = 1 + (1 + sin(2 * PI * i / N)) * 30;
 
                 sprintf(buffer, "%s|%d|%d|%d|%d|%d|%d|", id_string, i, (int) sample, P++, F, N, Fa);
                 send(client_fd, buffer, 25, 0);

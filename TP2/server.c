@@ -98,7 +98,7 @@ void *source_Thread(void *args) {
             for (size_t i = 0; i < num_clients; i++) {
                 if (src[index].clients_id[i] != NULL) {
                     string = src[index].clients_id[i];
-                    sprintf(buffer_to_send, "%s,%s", string, buffer);
+                    sprintf(buffer_to_send, "%s %s" , string, buffer);
 
                     if (sendto(socket_t, buffer_to_send, sizeof(buffer_to_send), 0,
                                (struct sockaddr *) &clientAddress,

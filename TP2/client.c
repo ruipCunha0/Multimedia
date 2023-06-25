@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     char *copy;
     char *token;
 
-    int Vi, Fa;
+    int Vi, Fa, F;
 
     pid_t pid;
 
@@ -151,7 +151,7 @@ int main(int argc, char *argv[]) {
                             scanf("%s", input_string);
 
                             sprintf(buffer, "play %s %s", input_string, id_string_client);
-                            sendto(client_socket, buffer, 15, 0, (struct sockaddr *) &serv_addr, serv_addr_len);
+                            sendto(client_socket, buffer, 30, 0, (struct sockaddr *) &serv_addr, serv_addr_len);
 
                             if(recvfrom(client_socket, buffer_to_receive, BUFFER_SIZE, 0, NULL, 0) < 0) {
                                 perror("ERROR!");
@@ -160,6 +160,7 @@ int main(int argc, char *argv[]) {
 
                             if (strcmp(buffer_to_receive, "channel does not exists...") == 0) {
                                 printf("%s \n", buffer_to_receive);
+
                             } else {
 
                                 pid = fork();
@@ -178,7 +179,7 @@ int main(int argc, char *argv[]) {
                                         }
 
                                         copy = strdup(buffer_to_receive);
-                                        strtok(copy, ",");
+                                        strtok(copy, " ");
 
                                         if (strcmp(copy, id_string_client) == 0) {
 
